@@ -1,0 +1,1807 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>天赋探索测试 · 知己知彼，方得始终</title>
+<style>
+  :root {
+    --gold: #c9a84c;
+    --dark: #1a1a2e;
+    --mid: #16213e;
+    --card: #0f3460;
+    --accent: #e94560;
+    --text: #f0e6d3;
+    --muted: #a89070;
+    --green: #4ecdc4;
+    --purple: #a855f7;
+    --blue: #3b82f6;
+    --orange: #f97316;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background: var(--dark);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* 星空背景 */
+  #stars-canvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+
+  /* ===== 封面 ===== */
+  #cover {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    text-align: center;
+    padding: 40px 20px;
+  }
+
+  .cover-emblem {
+    font-size: 80px;
+    margin-bottom: 20px;
+    animation: float 4s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+  }
+
+  .cover-title {
+    font-size: clamp(28px, 5vw, 48px);
+    font-weight: 700;
+    color: var(--gold);
+    letter-spacing: 4px;
+    margin-bottom: 12px;
+    text-shadow: 0 0 30px rgba(201,168,76,0.5);
+  }
+
+  .cover-subtitle {
+    font-size: 16px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+  }
+
+  .cover-desc {
+    max-width: 560px;
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.8;
+    margin: 20px 0 40px;
+    padding: 16px 24px;
+    border: 1px solid rgba(201,168,76,0.2);
+    border-radius: 12px;
+    background: rgba(201,168,76,0.05);
+  }
+
+  .cover-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 40px;
+  }
+
+  .tag {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    border: 1px solid;
+  }
+
+  .tag-mbti { color: var(--green); border-color: var(--green); background: rgba(78,205,196,0.1); }
+  .tag-xin { color: var(--gold); border-color: var(--gold); background: rgba(201,168,76,0.1); }
+  .tag-psy { color: var(--purple); border-color: var(--purple); background: rgba(168,85,247,0.1); }
+  .tag-star { color: var(--orange); border-color: var(--orange); background: rgba(249,115,22,0.1); }
+  .tag-ai { color: var(--blue); border-color: var(--blue); background: rgba(59,130,246,0.1); }
+
+  .btn-start {
+    padding: 16px 48px;
+    background: linear-gradient(135deg, var(--gold), #e8c66a);
+    color: var(--dark);
+    border: none;
+    border-radius: 50px;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 3px;
+    box-shadow: 0 0 30px rgba(201,168,76,0.4);
+    transition: all 0.3s;
+  }
+
+  .btn-start:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 50px rgba(201,168,76,0.6);
+  }
+
+  /* ===== 用户信息 ===== */
+  #user-info-page {
+    display: none;
+    min-height: 100vh;
+    padding: 60px 20px;
+  }
+
+  .page-title {
+    font-size: 24px;
+    color: var(--gold);
+    text-align: center;
+    margin-bottom: 8px;
+    letter-spacing: 2px;
+  }
+
+  .page-subtitle {
+    text-align: center;
+    color: var(--muted);
+    font-size: 14px;
+    margin-bottom: 40px;
+  }
+
+  .form-group {
+    margin-bottom: 20px;
+  }
+
+  .form-label {
+    display: block;
+    font-size: 14px;
+    color: var(--gold);
+    margin-bottom: 8px;
+    letter-spacing: 1px;
+  }
+
+  .form-input, .form-select {
+    width: 100%;
+    padding: 12px 16px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(201,168,76,0.3);
+    border-radius: 10px;
+    color: var(--text);
+    font-size: 15px;
+    outline: none;
+    transition: border-color 0.3s;
+  }
+
+  .form-input:focus, .form-select:focus {
+    border-color: var(--gold);
+    background: rgba(201,168,76,0.05);
+  }
+
+  .form-select option { background: var(--mid); }
+
+  .birth-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+  }
+
+  /* ===== 测试区 ===== */
+  #test-page {
+    display: none;
+    min-height: 100vh;
+    padding: 20px;
+  }
+
+  .progress-bar-wrap {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: rgba(26,26,46,0.95);
+    backdrop-filter: blur(10px);
+    padding: 16px 0;
+    margin-bottom: 30px;
+    border-bottom: 1px solid rgba(201,168,76,0.1);
+  }
+
+  .progress-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .progress-label { font-size: 13px; color: var(--muted); }
+  .progress-num { font-size: 13px; color: var(--gold); }
+
+  .progress-bar {
+    width: 100%;
+    height: 4px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold), var(--green));
+    border-radius: 2px;
+    transition: width 0.4s ease;
+  }
+
+  .section-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 36px 0 24px;
+  }
+
+  .divider-line { flex: 1; height: 1px; background: rgba(201,168,76,0.2); }
+
+  .divider-label {
+    font-size: 13px;
+    color: var(--gold);
+    letter-spacing: 2px;
+    padding: 4px 12px;
+    border: 1px solid rgba(201,168,76,0.3);
+    border-radius: 20px;
+    background: rgba(201,168,76,0.05);
+    white-space: nowrap;
+  }
+
+  .question-card {
+    background: rgba(15,52,96,0.4);
+    border: 1px solid rgba(201,168,76,0.15);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 20px;
+    transition: border-color 0.3s;
+  }
+
+  .question-card.answered { border-color: rgba(78,205,196,0.4); }
+
+  .question-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+
+  .q-num {
+    min-width: 32px;
+    height: 32px;
+    background: linear-gradient(135deg, var(--gold), #e8c66a);
+    color: var(--dark);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .q-text {
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--text);
+    flex: 1;
+  }
+
+  .q-tip {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 6px;
+    font-style: italic;
+  }
+
+  .options-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .options-grid.single { grid-template-columns: 1fr; }
+  .options-grid.three { grid-template-columns: 1fr 1fr 1fr; }
+
+  .option-btn {
+    padding: 10px 14px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
+    color: var(--text);
+    font-size: 14px;
+    cursor: pointer;
+    text-align: left;
+    line-height: 1.5;
+    transition: all 0.25s;
+  }
+
+  .option-btn:hover {
+    background: rgba(201,168,76,0.1);
+    border-color: rgba(201,168,76,0.4);
+  }
+
+  .option-btn.selected {
+    background: rgba(78,205,196,0.15);
+    border-color: var(--green);
+    color: var(--green);
+  }
+
+  /* 5分量表 */
+  .scale-wrap {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .scale-label {
+    font-size: 12px;
+    color: var(--muted);
+    white-space: nowrap;
+    min-width: 60px;
+  }
+
+  .scale-label.right { text-align: right; }
+
+  .scale-btns {
+    display: flex;
+    gap: 8px;
+    flex: 1;
+    justify-content: center;
+  }
+
+  .scale-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.15);
+    background: transparent;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .scale-btn:hover { border-color: var(--gold); color: var(--gold); }
+  .scale-btn.selected { border-color: var(--gold); background: var(--gold); color: var(--dark); }
+
+  .nav-row {
+    display: flex;
+    justify-content: center;
+    margin: 40px 0 20px;
+  }
+
+  .btn-submit {
+    padding: 16px 60px;
+    background: linear-gradient(135deg, var(--accent), #ff6b6b);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 3px;
+    box-shadow: 0 0 30px rgba(233,69,96,0.4);
+    transition: all 0.3s;
+  }
+
+  .btn-submit:hover { transform: scale(1.05); box-shadow: 0 0 50px rgba(233,69,96,0.6); }
+  .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  /* ===== 结果页 ===== */
+  #result-page {
+    display: none;
+    padding: 40px 20px 60px;
+  }
+
+  .result-hero {
+    text-align: center;
+    padding: 40px 20px;
+    background: linear-gradient(135deg, rgba(201,168,76,0.1), rgba(78,205,196,0.1));
+    border: 1px solid rgba(201,168,76,0.3);
+    border-radius: 20px;
+    margin-bottom: 30px;
+  }
+
+  .result-archetype-icon { font-size: 72px; margin-bottom: 16px; }
+
+  .result-archetype-name {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--gold);
+    letter-spacing: 3px;
+    margin-bottom: 8px;
+  }
+
+  .result-archetype-en {
+    font-size: 16px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    margin-bottom: 20px;
+  }
+
+  .result-archetype-desc {
+    font-size: 15px;
+    line-height: 1.8;
+    color: var(--text);
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .result-section {
+    background: rgba(15,52,96,0.3);
+    border: 1px solid rgba(201,168,76,0.15);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+
+  .result-section-title {
+    font-size: 18px;
+    color: var(--gold);
+    font-weight: 600;
+    letter-spacing: 2px;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(201,168,76,0.2);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* 维度雷达图 */
+  .radar-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .dim-bars {
+    width: 100%;
+  }
+
+  .dim-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .dim-bar-label {
+    min-width: 100px;
+    font-size: 13px;
+    color: var(--text);
+    text-align: right;
+  }
+
+  .dim-bar-track {
+    flex: 1;
+    height: 8px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .dim-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 1s ease;
+  }
+
+  .dim-bar-val {
+    min-width: 36px;
+    font-size: 13px;
+    color: var(--gold);
+    font-weight: 600;
+  }
+
+  /* 天赋特质卡片 */
+  .traits-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 12px;
+  }
+
+  .trait-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+    transition: all 0.3s;
+  }
+
+  .trait-card:hover { border-color: var(--gold); transform: translateY(-2px); }
+  .trait-icon { font-size: 28px; margin-bottom: 8px; }
+  .trait-name { font-size: 14px; color: var(--gold); font-weight: 600; margin-bottom: 6px; }
+  .trait-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+  /* 兴趣爱好 */
+  .hobbies-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  .hobby-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px;
+    padding: 18px;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hobby-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 4px; height: 100%;
+    border-radius: 4px 0 0 4px;
+  }
+
+  .hobby-card:hover { border-color: rgba(201,168,76,0.3); transform: translateX(4px); }
+
+  .hobby-num {
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 6px;
+    letter-spacing: 1px;
+  }
+
+  .hobby-name {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  .hobby-why {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-bottom: 10px;
+  }
+
+  .hobby-tag {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    display: inline-block;
+  }
+
+  /* 职业方向 */
+  .career-grid {
+    display: grid;
+    gap: 16px;
+  }
+
+  .career-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px;
+    padding: 20px;
+    transition: all 0.3s;
+  }
+
+  .career-card:hover { border-color: rgba(78,205,196,0.4); }
+
+  .career-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .career-icon { font-size: 28px; }
+
+  .career-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--green);
+    margin-bottom: 2px;
+  }
+
+  .career-sub { font-size: 12px; color: var(--muted); }
+
+  .career-desc {
+    font-size: 14px;
+    color: var(--text);
+    line-height: 1.7;
+    margin-bottom: 12px;
+  }
+
+  .ai-collab {
+    background: rgba(59,130,246,0.08);
+    border: 1px solid rgba(59,130,246,0.2);
+    border-radius: 10px;
+    padding: 12px;
+    font-size: 13px;
+    color: #93c5fd;
+    line-height: 1.6;
+  }
+
+  .ai-collab strong { color: var(--blue); }
+
+  /* 哲学智慧 */
+  .wisdom-card {
+    background: rgba(201,168,76,0.06);
+    border: 1px solid rgba(201,168,76,0.2);
+    border-radius: 14px;
+    padding: 20px;
+    margin-bottom: 14px;
+    position: relative;
+  }
+
+  .wisdom-quote {
+    font-size: 18px;
+    color: var(--gold);
+    font-style: italic;
+    margin-bottom: 8px;
+    line-height: 1.6;
+  }
+
+  .wisdom-source {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  .wisdom-interp {
+    font-size: 14px;
+    color: var(--text);
+    line-height: 1.7;
+  }
+
+  /* MBTI标签 */
+  .mbti-badge {
+    display: inline-flex;
+    gap: 4px;
+    margin-top: 12px;
+  }
+
+  .mbti-letter {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 700;
+  }
+
+  /* 动画 */
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .fade-in { animation: fadeInUp 0.5s ease forwards; }
+
+  .btn-retry {
+    display: block;
+    margin: 30px auto 0;
+    padding: 12px 36px;
+    background: transparent;
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    border-radius: 50px;
+    font-size: 15px;
+    cursor: pointer;
+    letter-spacing: 2px;
+    transition: all 0.3s;
+  }
+
+  .btn-retry:hover { background: rgba(201,168,76,0.1); }
+
+  .btn-pdf {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin: 16px auto 0;
+    padding: 12px 36px;
+    background: linear-gradient(135deg, #e94560, #ff6b6b);
+    border: none;
+    color: white;
+    border-radius: 50px;
+    font-size: 15px;
+    cursor: pointer;
+    letter-spacing: 2px;
+    transition: all 0.3s;
+    box-shadow: 0 4px 20px rgba(233,69,96,0.3);
+  }
+
+  .btn-pdf:hover { transform: scale(1.04); box-shadow: 0 4px 30px rgba(233,69,96,0.5); }
+
+  .action-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 30px;
+  }
+
+  /* 天赋同行者 */
+  .peers-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  @media (max-width: 700px) {
+    .peers-grid { grid-template-columns: 1fr; }
+  }
+
+  .peer-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 16px;
+    overflow: hidden;
+    transition: all 0.3s;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .peer-card:hover {
+    border-color: rgba(201,168,76,0.4);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+  }
+
+  .peer-avatar-wrap {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    background: rgba(255,255,255,0.05);
+    position: relative;
+  }
+
+  .peer-avatar {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top;
+    filter: sepia(20%) brightness(0.9);
+    transition: filter 0.3s;
+  }
+
+  .peer-card:hover .peer-avatar { filter: sepia(0%) brightness(1); }
+
+  .peer-resonance-badge {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    padding: 6px 10px;
+    background: linear-gradient(transparent, rgba(0,0,0,0.7));
+    font-size: 11px;
+    color: var(--gold);
+    letter-spacing: 0.5px;
+  }
+
+  .peer-info {
+    padding: 14px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .peer-name {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .peer-era {
+    font-size: 11px;
+    color: var(--gold);
+    letter-spacing: 0.5px;
+  }
+
+  .peer-years {
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  .peer-desc {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.65;
+    flex: 1;
+  }
+
+  /* ===== 打印/PDF 样式 ===== */
+  @media print {
+    #stars-canvas, .btn-retry, .btn-pdf, .action-row, #cover, #user-info-page, #test-page { display: none !important; }
+    body { background: #fff !important; color: #1a1a1a !important; }
+    #result-page { display: block !important; padding: 0; }
+    .result-hero { background: #f8f4e8 !important; border-color: #c9a84c !important; }
+    .result-archetype-name { color: #8b6914 !important; }
+    .result-section { background: #f9f9f9 !important; border-color: #ddd !important; break-inside: avoid; }
+    .result-section-title { color: #8b6914 !important; }
+    .hobby-name { color: #8b6914 !important; }
+    .career-title { color: #1a6b6b !important; }
+    .wisdom-quote { color: #8b6914 !important; }
+    .ai-collab { background: #e8f0fe !important; border-color: #aac4ff !important; }
+    .ai-collab strong { color: #1a4fc2 !important; }
+    .dim-bar-fill { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+    .page-break { page-break-before: always; }
+    a { color: inherit; text-decoration: none; }
+  }
+
+  /* 模态提示 */
+  .toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: rgba(233,69,96,0.9);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 50px;
+    font-size: 14px;
+    z-index: 999;
+    transition: transform 0.3s;
+    pointer-events: none;
+  }
+
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  @media (max-width: 600px) {
+    .options-grid { grid-template-columns: 1fr; }
+    .hobbies-grid { grid-template-columns: 1fr; }
+    .scale-wrap { flex-direction: column; gap: 4px; }
+    .scale-label { min-width: auto; text-align: center; }
+    .birth-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="stars-canvas"></canvas>
+<div id="toast" class="toast">请完成所有题目后再提交</div>
+
+<!-- 封面 -->
+<div id="cover" class="container">
+  <div class="cover-emblem">✦</div>
+  <div class="cover-title">天赋探索测试</div>
+  <div class="cover-subtitle">知己方能知天下 · 明心才可见本性</div>
+  <div class="cover-tags">
+    <span class="tag tag-mbti">MBTI 性格</span>
+    <span class="tag tag-xin">阳明心学</span>
+    <span class="tag tag-psy">现代心理学</span>
+    <span class="tag tag-star">天赋分析</span>
+    <span class="tag tag-ai">AI 职业规划</span>
+  </div>
+  <div class="cover-desc">
+    融合 MBTI 人格理论、加德纳多元智能、积极心理学天赋优势、阳明心学"致良知"、老庄道法自然与儒家"因材施教"等东西方智慧，<br>通过 80 道精心设计的题目，发现你内在的天赋密码，并为你量身推荐 7 个培养方向与结合 AI Agent 的职业发展路径。
+  </div>
+  <button class="btn-start" onclick="showUserInfo()">开始探索我的天赋 →</button>
+</div>
+
+<!-- 用户信息 -->
+<div id="user-info-page" class="container">
+  <div class="page-title">先让我们认识你</div>
+  <div class="page-subtitle">这些信息将帮助我们给出更个性化的分析</div>
+
+  <div class="form-group">
+    <label class="form-label">你的名字（或昵称）</label>
+    <input type="text" id="uname" class="form-input" placeholder="请输入你的名字...">
+  </div>
+
+  <div class="form-group">
+    <label class="form-label">出生年月日</label>
+    <div class="birth-row">
+      <input type="number" id="byear" class="form-input" placeholder="年 (如1990)">
+      <input type="number" id="bmonth" class="form-input" placeholder="月 (1-12)">
+      <input type="number" id="bday" class="form-input" placeholder="日 (1-31)">
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label class="form-label">性别</label>
+    <select id="ugender" class="form-select">
+      <option value="">请选择</option>
+      <option value="male">男</option>
+      <option value="female">女</option>
+      <option value="other">其他</option>
+    </select>
+  </div>
+
+  <div class="form-group">
+    <label class="form-label">目前的状态</label>
+    <select id="ustatus" class="form-select">
+      <option value="">请选择</option>
+      <option value="student">学生</option>
+      <option value="working">职场人</option>
+      <option value="entrepreneur">创业者</option>
+      <option value="freelance">自由职业</option>
+      <option value="transition">正在转型</option>
+      <option value="other">其他</option>
+    </select>
+  </div>
+
+  <div class="form-group">
+    <label class="form-label">你最想解决的困惑是？</label>
+    <select id="ugoal" class="form-select">
+      <option value="">请选择</option>
+      <option value="career">找到适合自己的职业方向</option>
+      <option value="talent">发现自己真正的天赋</option>
+      <option value="hobby">找到值得坚持的兴趣爱好</option>
+      <option value="selfknow">更深入了解自己的性格</option>
+      <option value="ai">学会如何用AI放大自己的优势</option>
+    </select>
+  </div>
+
+  <div class="nav-row">
+    <button class="btn-start" onclick="startTest()">进入测试 →</button>
+  </div>
+</div>
+
+<!-- 测试区 -->
+<div id="test-page">
+  <div class="container">
+    <div class="progress-bar-wrap">
+      <div class="progress-info">
+        <span class="progress-label" id="progress-section-label">第一维度：心智与思维</span>
+        <span class="progress-num"><span id="answered-count">0</span> / 80</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+      </div>
+    </div>
+    <div id="questions-container"></div>
+    <div class="nav-row">
+      <button class="btn-submit" id="btn-submit" onclick="submitTest()">查看我的天赋报告 ✦</button>
+    </div>
+  </div>
+</div>
+
+<!-- 结果页 -->
+<div id="result-page" class="container">
+  <div id="result-content"></div>
+  <div class="action-row">
+    <button class="btn-pdf" onclick="exportPDF()">📥 导出 PDF 报告</button>
+    <button class="btn-retry" onclick="location.reload()">↺ 重新测试</button>
+  </div>
+</div>
+
+<script>
+// ===== 星空背景 =====
+(function() {
+  const canvas = document.getElementById('stars-canvas');
+  const ctx = canvas.getContext('2d');
+  let stars = [];
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+
+  function createStars() {
+    stars = [];
+    for (let i = 0; i < 180; i++) {
+      stars.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        r: Math.random() * 1.5 + 0.3,
+        alpha: Math.random(),
+        speed: Math.random() * 0.005 + 0.002
+      });
+    }
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    stars.forEach(s => {
+      s.alpha += s.speed;
+      if (s.alpha > 1 || s.alpha < 0) s.speed = -s.speed;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(201,168,76,${s.alpha * 0.6})`;
+      ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+
+  resize();
+  createStars();
+  draw();
+  window.addEventListener('resize', () => { resize(); createStars(); });
+})();
+
+// ===== 题目数据 =====
+const SECTIONS = [
+  { id: 'mind', name: '心智与思维', icon: '🧠', color: '#a855f7' },
+  { id: 'emotion', name: '情感与关系', icon: '💫', color: '#ec4899' },
+  { id: 'action', name: '行动与创造', icon: '⚡', color: '#f97316' },
+  { id: 'value', name: '价值与意义', icon: '✦', color: '#c9a84c' },
+  { id: 'body', name: '身体与感知', icon: '🌿', color: '#4ecdc4' },
+];
+
+const QUESTIONS = [
+  // ===== 第一维度：心智与思维 (Q1-16) =====
+  { id:1, section:'mind', type:'scale', text:'面对一个复杂问题，我倾向于先拆解、分析，找到底层逻辑，再行动。', left:'完全不像我', right:'非常像我', dim:'analytical' },
+  { id:2, section:'mind', type:'choice4', text:'当你学习新知识时，你最喜欢哪种方式？', options:['看书/文章，系统深入', '听人讲解，边听边聊', '直接动手实践', '观察别人怎么做'], dims:['reading','social','hands-on','observing'] },
+  { id:3, section:'mind', type:'scale', text:'我经常会脑子里冒出各种创意，甚至同时在思考多件事。', left:'很少这样', right:'几乎一直如此', dim:'creative' },
+  { id:4, section:'mind', type:'choice4', text:'你的记忆更强的是？', options:['文字和逻辑关系', '图像和空间结构', '声音和节奏韵律', '肢体动作和感觉'], dims:['verbal','spatial','musical','kinesthetic'] },
+  { id:5, section:'mind', type:'scale', text:'我善于发现事物之间不易被人察觉的隐藏联系。', left:'不太擅长', right:'这是我的强项', dim:'pattern' },
+  { id:6, section:'mind', type:'choice4', text:'以下哪个场景最让你感到"进入状态"（心流体验）？', options:['解决一道烧脑的难题', '创作一件作品（文章/设计/音乐）', '帮助一个人解决困境', '在自然中独处思考'], dims:['analytical','creative','interpersonal','intrapersonal'] },
+  { id:7, section:'mind', type:'scale', text:'我喜欢读书、研究，深挖一个领域让我有成就感。', left:'不太感兴趣', right:'非常享受', dim:'intellectual' },
+  { id:8, section:'mind', type:'choice4', text:'你对哪类内容最容易产生持续兴趣？', options:['科学/技术/逻辑', '艺术/美学/创作', '人/社会/文化', '自然/哲学/宇宙'], dims:['analytical','artistic','social','philosophical'] },
+  { id:9, section:'mind', type:'scale', text:'我能快速抓住对方说话的核心意思，并找到最关键的点。', left:'不太擅长', right:'非常擅长', dim:'verbal' },
+  { id:10, section:'mind', type:'choice4', text:'如果让你研究一个新事物，你会？', options:['系统读资料，搭建知识框架', '找最权威的人请教', '直接尝试，从实践中学', '先感受整体，再补充细节'], dims:['analytical','social','hands-on','intuitive'] },
+  { id:11, section:'mind', type:'scale', text:'在空间和方位感上，我很敏感，容易在脑海里"构建"三维图像。', left:'很弱，经常迷路', right:'非常强，方向感好', dim:'spatial' },
+  { id:12, section:'mind', type:'choice4', text:'你更擅长哪种思维模式？', options:['收敛思维：找到唯一正确答案', '发散思维：想出100种可能', '系统思维：看清整体结构', '直觉思维：凭感觉直接判断'], dims:['analytical','creative','systems','intuitive'] },
+  { id:13, section:'mind', type:'scale', text:'我对数字、数据敏感，能快速看懂图表和统计信息。', left:'完全不敏感', right:'非常敏感', dim:'logical' },
+  { id:14, section:'mind', type:'choice4', text:'你的学习习惯更接近哪种？', options:['主题式学习，聚焦深挖', '随机探索，博而不专', '问题驱动，需要就学', '社交式学习，喜欢讨论'], dims:['depth','breadth','practical','social'] },
+  { id:15, section:'mind', type:'scale', text:'我对语言文字非常敏感，写作或讲述时能精准表达想法。', left:'不太擅长', right:'这是我的天赋', dim:'verbal' },
+  { id:16, section:'mind', type:'choice4', text:'你解决问题时，更依赖什么？', options:['数据和逻辑推理', '直觉和内在感受', '他人的意见和讨论', '亲身验证和实践'], dims:['analytical','intuitive','social','hands-on'] },
+
+  // ===== 第二维度：情感与关系 (Q17-32) =====
+  { id:17, section:'emotion', type:'scale', text:'我对他人的情绪变化非常敏感，能感受到对方没说出口的感受。', left:'不太敏感', right:'非常敏感', dim:'empathy' },
+  { id:18, section:'emotion', type:'choice4', text:'在社交中，你更享受哪种状态？', options:['深入聊一个话题，忘记时间', '认识各种各样的人，广结善缘', '有几个相知的老友，不需多言', '独处，偶尔与人交流即可'], dims:['depth','social','intimate','introverted'] },
+  { id:19, section:'emotion', type:'scale', text:'当朋友遇到困难，我会自然地想去帮助、支持他们。', left:'不太会主动', right:'这是我的本能', dim:'helping' },
+  { id:20, section:'emotion', type:'choice4', text:'以下哪个角色最符合你在群体中的样子？', options:['领导者：带领大家向目标前进', '协调者：让团队和谐运作', '创意者：提供新想法和方向', '执行者：把任务落到实处'], dims:['leadership','harmony','creative','practical'] },
+  { id:21, section:'emotion', type:'scale', text:'我善于在矛盾中找到双方都能接受的方案，化解冲突。', left:'很难做到', right:'非常擅长', dim:'harmony' },
+  { id:22, section:'emotion', type:'choice4', text:'你更擅长与哪类人建立关系？', options:['同频的深度连接型', '广泛的浅层社交型', '被帮助需要关怀的人', '优秀的人，互相激励'], dims:['depth','social','helping','achievement'] },
+  { id:23, section:'emotion', type:'scale', text:'在公开场合发言、表达自己的想法，我感到自然和享受。', left:'很不舒服', right:'非常享受', dim:'expression' },
+  { id:24, section:'emotion', type:'choice4', text:'当你遭遇挫折时，你的第一反应是？', options:['分析原因，调整策略', '找人倾诉，寻求支持', '沉淀反思，一个人消化', '马上行动，在行动中化解'], dims:['analytical','social','intrapersonal','action'] },
+  { id:25, section:'emotion', type:'scale', text:'我能精准识别并管理自己的情绪，不轻易被外界干扰。', left:'很难做到', right:'非常擅长', dim:'eq' },
+  { id:26, section:'emotion', type:'choice4', text:'你最享受的交流方式是？', options:['一对一深谈', '小团体讨论', '公开讲演或分享', '文字/写作表达'], dims:['intimate','group','public','writing'] },
+  { id:27, section:'emotion', type:'scale', text:'我有强烈的愿望想要影响、启发他人，帮助他人成长。', left:'不太在意', right:'这是我的使命感', dim:'influence' },
+  { id:28, section:'emotion', type:'choice4', text:'你最大的社交价值在于？', options:['给建议和解决方案', '倾听和情感支持', '带来欢笑和活力', '分享知识和见解'], dims:['advisory','empathy','energy','knowledge'] },
+  { id:29, section:'emotion', type:'scale', text:'我对肢体语言、微表情等非言语信号很敏感。', left:'几乎注意不到', right:'非常敏感', dim:'empathy' },
+  { id:30, section:'emotion', type:'choice4', text:'在一段关系中，你更擅长扮演？', options:['引领者：给方向和动力', '滋养者：给关怀和温暖', '激励者：给能量和信念', '陪伴者：稳定可靠的存在'], dims:['leadership','nurturing','motivation','reliability'] },
+  { id:31, section:'emotion', type:'scale', text:'我能快速建立信任，让陌生人对我敞开心扉。', left:'很难做到', right:'这是我的天赋', dim:'trust' },
+  { id:32, section:'emotion', type:'choice4', text:'遇到意见相左时，你更倾向于？', options:['用事实和逻辑说服对方', '理解对方立场，找共同点', '据理力争，坚持自己', '暂时妥协，保持和谐'], dims:['logical','harmony','assertive','harmony'] },
+
+  // ===== 第三维度：行动与创造 (Q33-48) =====
+  { id:33, section:'action', type:'scale', text:'面对目标，我习惯制定详细计划，并严格执行。', left:'计划从来是用来打破的', right:'计划让我感到安全和效率', dim:'planning' },
+  { id:34, section:'action', type:'choice4', text:'哪种工作状态最让你高效？', options:['独立专注，不被打扰', '团队协作，互相激发', '边做边改，快速迭代', '深思熟虑后，一气呵成'], dims:['independent','collaborative','agile','deliberate'] },
+  { id:35, section:'action', type:'scale', text:'我喜欢动手制作，把想法变成看得见摸得着的东西。', left:'不太感兴趣', right:'非常喜欢', dim:'making' },
+  { id:36, section:'action', type:'choice4', text:'你的创造力更多体现在？', options:['提出颠覆性的新想法', '把现有东西做到极致', '发现并连接不同领域', '用独特的方式呈现内容'], dims:['innovation','mastery','connection','expression'] },
+  { id:37, section:'action', type:'scale', text:'我做事专注，能在一件事上长时间保持高度投入。', left:'容易分心', right:'极度专注', dim:'focus' },
+  { id:38, section:'action', type:'choice4', text:'面对一个新项目，你最先做的是？', options:['搞清楚目标和成功标准', '召集人，组织团队', '直接开始，边做边想', '先做大量调研，再动手'], dims:['goal-oriented','leadership','action','research'] },
+  { id:39, section:'action', type:'scale', text:'我对美感有独特的鉴赏力，能感受到别人忽略的美丽细节。', left:'不太在意美感', right:'美感极其敏锐', dim:'aesthetic' },
+  { id:40, section:'action', type:'choice4', text:'你在完成一件事时，更关注哪个方面？', options:['做得快，高效完成', '做得好，追求完美', '做得有意义，价值导向', '做得有趣，享受过程'], dims:['efficiency','mastery','meaning','enjoyment'] },
+  { id:41, section:'action', type:'scale', text:'我善于在混乱中找到秩序，推动事情向前发展。', left:'混乱让我无所适从', right:'越乱越能激发我', dim:'leadership' },
+  { id:42, section:'action', type:'choice4', text:'以下哪种感觉你最渴望？', options:['完成一个困难挑战的成就感', '创作出一件独特作品的满足感', '帮助一个人改变的感动', '理解了一个深刻道理的顿悟'], dims:['achievement','artistic','helping','insight'] },
+  { id:43, section:'action', type:'scale', text:'我喜欢竞争，有挑战和压力反而能激发我更好的表现。', left:'不喜欢竞争', right:'竞争让我兴奋', dim:'competitive' },
+  { id:44, section:'action', type:'choice4', text:'你更倾向哪种工作节奏？', options:['稳定有序，可预期', '多变灵活，随时应变', '冲刺休息，张弛有度', '随心所欲，自由创作'], dims:['stability','flexibility','sprint','freedom'] },
+  { id:45, section:'action', type:'scale', text:'我有很强的执行力，说到做到，能把计划变成结果。', left:'想法很多，执行差', right:'执行力极强', dim:'execution' },
+  { id:46, section:'action', type:'choice4', text:'你最擅长的是哪个阶段？', options:['0→1：从无到有，开创', '1→10：快速成长，扩张', '10→100：优化系统，规模化', '探索：不断尝试新方向'], dims:['pioneer','growth','scale','explorer'] },
+  { id:47, section:'action', type:'scale', text:'我对色彩、声音、空间等感官刺激非常敏感，有独特体验。', left:'不太敏感', right:'非常敏感', dim:'sensory' },
+  { id:48, section:'action', type:'choice4', text:'如果可以选择，你最想做的职业是？', options:['创业者/开创者', '研究者/思考者', '艺术家/创作者', '导师/影响者'], dims:['entrepreneur','intellectual','artist','teacher'] },
+
+  // ===== 第四维度：价值与意义 (Q49-64) =====
+  { id:49, section:'value', type:'scale', text:'我有强烈的价值观，有些事情我无论如何都不愿意妥协。', left:'比较灵活，可以变通', right:'底线明确，绝不妥协', dim:'values' },
+  { id:50, section:'value', type:'choice4', text:'你最渴望在工作中获得什么？', options:['财富与物质成就', '社会地位与影响力', '创作自由与表达空间', '意义感与他人的改变'], dims:['wealth','status','freedom','meaning'] },
+  { id:51, section:'value', type:'scale', text:'我对社会不公、他人痛苦感到强烈的不安，想要做些什么。', left:'不太有这种冲动', right:'这种冲动很强烈', dim:'justice' },
+  { id:52, section:'value', type:'choice4', text:'以下哪种人生哲学最接近你的？', options:['知行合一：懂了就要做，做了才叫懂（阳明）', '上善若水：顺应自然，不争而胜（老子）', '仁者爱人：推己及人，以人为本（孔子）', '逍遥游：突破束缚，追求精神自由（庄子）'], dims:['action-insight','nature','benevolence','freedom'] },
+  { id:53, section:'value', type:'scale', text:'我不在乎别人的看法，坚持走自己认为正确的路。', left:'很在乎别人的评价', right:'完全不受外界影响', dim:'independence' },
+  { id:54, section:'value', type:'choice4', text:'你更渴望哪种成功？', options:['被认可：社会知名度和荣誉', '被需要：帮助了很多人', '自我实现：活出自己的潜力', '积累：财富和资产'], dims:['recognition','helping','self-actualize','wealth'] },
+  { id:55, section:'value', type:'scale', text:'我经常思考生命的意义、存在的价值等深刻问题。', left:'不太想这些', right:'这是我常思考的', dim:'philosophical' },
+  { id:56, section:'value', type:'choice4', text:'你认为天赋最重要的是？', options:['发现天赋，找到擅长的事', '磨炼天赋，做到极致', '分享天赋，影响他人', '享受天赋，快乐至上'], dims:['discovery','mastery','sharing','enjoyment'] },
+  { id:57, section:'value', type:'scale', text:'我相信人有与生俱来的使命，我在追寻属于自己的那个。', left:'不太相信', right:'强烈相信这个', dim:'mission' },
+  { id:58, section:'value', type:'choice4', text:'以下哪句话最让你产生共鸣？', options:['"致良知"——倾听内心的声音，知道对的事就要去做', '"无为而无不为"——不刻意，顺势而为，让事情自然发生', '"己所不欲，勿施于人"——以善意为基础，体贴待人', '"天地与我并生，万物与我为一"——超越个体，融入整体'], dims:['conscience','flow','empathy','unity'] },
+  { id:59, section:'value', type:'scale', text:'我对金钱的态度是：够用就好，意义和自由更重要。', left:'金钱非常重要，越多越好', right:'意义和自由远高于金钱', dim:'intrinsic' },
+  { id:60, section:'value', type:'choice4', text:'你最害怕哪种人生结局？', options:['平庸无为，碌碌无功', '孤独无依，没有深情', '内心迷失，不知自己是谁', '努力一生，却未被看见'], dims:['achievement','connection','identity','recognition'] },
+  { id:61, section:'value', type:'scale', text:'我相信每个人都有改变世界的可能，包括我自己。', left:'这太理想化了', right:'坚定相信', dim:'agency' },
+  { id:62, section:'value', type:'choice4', text:'你更倾向于相信？', options:['人是理性的，凭逻辑做决策', '人是感性的，情感驱动一切', '人是复杂的，二者都有', '人是自然的，顺应天性最重要'], dims:['rational','emotional','complex','natural'] },
+  { id:63, section:'value', type:'scale', text:'我愿意为自己相信的事情牺牲短期利益或安稳。', left:'稳定更重要', right:'愿意为信念冒险', dim:'courage' },
+  { id:64, section:'value', type:'choice4', text:'你对"成功"的定义是？', options:['功成名就，被历史记住', '家庭幸福，关系美满', '内心平静，活在当下', '不断成长，超越昨天的自己'], dims:['legacy','family','peace','growth'] },
+
+  // ===== 第五维度：身体与感知 (Q65-80) =====
+  { id:65, section:'body', type:'scale', text:'我对音乐有强烈的共鸣，音乐能直接触动我的情感。', left:'一般般，没特别感觉', right:'音乐对我影响深远', dim:'musical' },
+  { id:66, section:'body', type:'choice4', text:'你更倾向于哪种方式充电（恢复能量）？', options:['独处安静，冥想阅读', '户外运动，接触自然', '聚会社交，与人交流', '创作沉浸，进入心流'], dims:['introverted','nature','social','flow'] },
+  { id:67, section:'body', type:'scale', text:'我有较强的节奏感，对音调和节拍很敏感。', left:'节奏感很差', right:'节奏感极好', dim:'musical' },
+  { id:68, section:'body', type:'choice4', text:'你身体的哪个部分表达最自然？', options:['嘴：说话表达', '手：动手创作', '腿脚：运动行动', '眼睛：观察感知'], dims:['verbal','making','kinesthetic','observing'] },
+  { id:69, section:'body', type:'scale', text:'我对自然环境（动植物、山川海洋）有深深的亲切感。', left:'无所谓', right:'与自然有强烈连结', dim:'nature' },
+  { id:70, section:'body', type:'choice4', text:'如果完全自由，你的理想日常是？', options:['在咖啡馆读书写作思考', '在工作室创作设计制作', '在世界各地旅行探索', '与重要的人深度连接'], dims:['intellectual','artistic','explorer','social'] },
+  { id:71, section:'body', type:'scale', text:'运动或肢体活动让我感到愉悦，我通过身体行动感知世界。', left:'不太喜欢运动', right:'身体活动极其重要', dim:'kinesthetic' },
+  { id:72, section:'body', type:'choice4', text:'你更喜欢哪类环境？', options:['安静有序，专注思考的空间', '充满艺术感的美丽环境', '充满活力，人来人往的地方', '自然开阔，无拘无束的户外'], dims:['quiet','aesthetic','social','nature'] },
+  { id:73, section:'body', type:'scale', text:'我的直觉非常准，经常凭第一感觉判断事物，且往往正确。', left:'我不太相信直觉', right:'我的直觉极其准确', dim:'intuitive' },
+  { id:74, section:'body', type:'choice4', text:'你如何看待压力？', options:['压力是信号，要先分析', '压力转化为行动力', '压力要先释放情绪', '压力需要顺其自然'], dims:['analytical','action','emotional','natural'] },
+  { id:75, section:'body', type:'scale', text:'我对颜色、形状、空间布局有天然的敏感和审美。', left:'不太在意', right:'审美是我天生的能力', dim:'aesthetic' },
+  { id:76, section:'body', type:'choice4', text:'最能让你进入心流的活动类型是？', options:['分析研究，解谜推理', '创作表达，制作呈现', '体育运动，身体挑战', '交流对话，启发他人'], dims:['analytical','creative','kinesthetic','social'] },
+  { id:77, section:'body', type:'scale', text:'我对食物、香气、触感等感官体验非常享受，生活品质对我很重要。', left:'不太在意感官', right:'非常享受感官体验', dim:'sensory' },
+  { id:78, section:'body', type:'choice4', text:'你最擅长的"超能力"是？', options:['一眼看穿本质（洞察力）', '感同身受他人（共情力）', '把复杂的事说清楚（表达力）', '在混乱中找到方向（导航力）'], dims:['insight','empathy','expression','leadership'] },
+  { id:79, section:'body', type:'scale', text:'我对时间有很强的掌控感，总能有效安排和利用时间。', left:'时间管理是我的弱项', right:'时间管理是我的强项', dim:'organized' },
+  { id:80, section:'body', type:'choice4', text:'你认为你最终会以什么身份被人记住？', options:['思想家/智者：用思想影响世界', '创造者/艺术家：留下独特作品', '连接者/领袖：带动一批人', '守护者/导师：帮助无数个体成长'], dims:['intellectual','artist','leader','mentor'] },
+];
+
+// 天赋原型定义
+const ARCHETYPES = {
+  THINKER: {
+    icon: '🔭',
+    name: '深邃思想家',
+    en: 'The Deep Thinker',
+    color: '#a855f7',
+    desc: '你拥有罕见的分析深度和思维穿透力。你天生对知识有渴望，能看见他人看不见的规律和联系。内在世界丰富，逻辑清晰，善于在复杂中找到简单的本质。阳明先生说"知是行之始"，你的天赋在于"知"——深刻的洞察是你最大的财富。',
+    mbti: ['INTJ','INTP','INFJ'],
+    dims: ['analytical','logical','intellectual','philosophical','pattern'],
+    hobbies: [
+      { name:'哲学阅读与写作', why:'滋养你的深度思维，让你的洞察力得到系统输出。写作能把内在的思考变成有价值的内容。', color:'#a855f7', tag:'知识构建' },
+      { name:'围棋/国际象棋', why:'极限锻炼你的战略思维和全局视野，符合你天生的系统思考能力。', color:'#7c3aed', tag:'战略训练' },
+      { name:'数据分析/编程', why:'把你的逻辑能力变成数字时代的核心竞争力，是思考者最自然的技能延伸。', color:'#6d28d9', tag:'技能硬实力' },
+      { name:'古典音乐欣赏', why:'音乐是另一种逻辑和结构的语言，能激活你大脑中的模式识别天赋。', color:'#8b5cf6', tag:'感性平衡' },
+      { name:'历史与传记研究', why:'通过研究历史上的思想家，你能找到精神同频者，并萃取时间验证过的智慧。', color:'#9333ea', tag:'智慧积累' },
+      { name:'冥想与内观', why:'"致良知"的关键在于向内。冥想帮助你把思维的噪音过滤掉，进入更深的洞察层。', color:'#7e22ce', tag:'心灵修炼' },
+      { name:'独立写作/博客', why:'把你的洞察分享出去，是思想家放大影响力的天然通道，也是与世界对话的方式。', color:'#6b21a8', tag:'影响力建设' },
+    ],
+    careers: [
+      { icon:'🤖', title:'AI 战略顾问 / 提示词工程师', sub:'技术×思想的交叉地带', desc:'用你的系统思维设计AI工作流，成为人与AI协作的架构师。你的洞察力帮助企业看清AI应用的战略价值。', ai:'结合 OpenClaw/Coze 等平台，搭建自动化知识研究系统，打造AI Agent帮你持续收集和分析信息，让你的洞察力乘以10倍。' },
+      { icon:'📚', title:'知识付费创作者 / 独立研究员', sub:'思想变现', desc:'把你深度研究的洞察转化为课程、报告或书籍。在信息泛滥的时代，深度思考是稀缺资产。', ai:'用AI Agent自动整理研究资料、生成内容大纲、发布到各平台，把你从重复的信息处理中解放出来，专注最有价值的洞察。' },
+      { icon:'🏛️', title:'战略咨询 / 研究分析师', sub:'洞察服务商业', desc:'你对系统结构的理解，让你天然适合战略咨询。帮助组织看清未来趋势，这是你洞察力最直接的变现方式。', ai:'借助AI的信息检索和数据分析能力，你可以在原来10倍的时间内完成同等质量的研究，大幅提升咨询价值。' },
+    ],
+    wisdom: [
+      { quote:'知之为知之，不知为不知，是知也。', source:'——孔子《论语·为政》', interp:'真正的智慧始于对自己认知边界的清晰认识。你的深度，建立在诚实面对"不知"的勇气上。' },
+      { quote:'圣人不积，既以为人己愈有，既以与人己愈多。', source:'——老子《道德经》', interp:'你的思想越是分享出去，你的洞察力反而会越强。不要让思考只停留在内心，把它们传递出去。' },
+    ],
+    peers: [
+      {
+        name: '王阳明', era: '明代哲学家 · 军事家', years: '1472–1529',
+        avatar: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Wang_Shouren.jpg/240px-Wang_Shouren.jpg',
+        resonance: '知行合一的思想领袖',
+        desc: '龙场悟道，在极端困境中完成内心的思想突破。他的"心外无物"建立于深度的内在探索，是历史上最伟大的思想家之一。'
+      },
+      {
+        name: '爱因斯坦', era: '物理学家 · 思想家', years: '1879–1955',
+        avatar: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Albert_Einstein_Head.jpg/240px-Albert_Einstein_Head.jpg',
+        resonance: '用纯粹思维改变世界的认知',
+        desc: '不依赖实验室，靠"思想实验"推导出相对论。他的洞察力来自对宇宙本质的强烈好奇与深度追问，是典型的深邃思想家。'
+      },
+      {
+        name: '查理·芒格', era: '投资思想家 · 哲学家', years: '1924–2023',
+        avatar: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/Charlie_Munger_2.jpg/240px-Charlie_Munger_2.jpg',
+        resonance: '多元思维模型的建构者',
+        desc: '横跨物理、心理、历史、经济等领域构建"思维模型格栅"，是现代商业世界中最具代表性的跨领域分析思想家。'
+      },
+    ]
+  },
+  CREATOR: {
+    icon: '🎨',
+    name: '天才创造者',
+    en: 'The Creative Genius',
+    color: '#f97316',
+    desc: '你拥有强烈的创造欲和审美直觉。你不满足于已有的东西，总在想象如何创造出世界上还不存在的美丽事物。你的大脑是一台创意机器，把不同领域的事物连接在一起，产生崭新的可能。庄子"逍遥游"的精神就在你身上——不受限制的自由创造。',
+    mbti: ['ENFP','INFP','ENTP','ISFP'],
+    dims: ['creative','artistic','aesthetic','sensory','expression'],
+    hobbies: [
+      { name:'数字艺术/设计', why:'把你的创意天赋和当下最前沿的工具结合，AI辅助设计是创造者最强大的技能。', color:'#f97316', tag:'创意表达' },
+      { name:'写作与创意写作', why:'写作是最纯粹的创造——用文字构建世界。你的天赋能帮你创造出令人动容的故事和内容。', color:'#ea580c', tag:'叙事创作' },
+      { name:'音乐创作/即兴演奏', why:'音乐是创造者释放内在能量的最直接通道，即兴演奏特别适合你不受约束的创意风格。', color:'#dc2626', tag:'即兴创造' },
+      { name:'摄影与视觉艺术', why:'训练你观察美的眼光，把你的独特视角用影像固化下来，也是打造个人品牌的利器。', color:'#c2410c', tag:'视觉捕捉' },
+      { name:'旅行与文化探索', why:'广泛的文化体验是创造者的素材库。越多的输入，才能有越独特的创意输出。', color:'#b45309', tag:'灵感来源' },
+      { name:'手工艺/陶艺/木工', why:'用双手创造实体作品，平衡你内心世界与外在表达，从"想象"到"创造"的完整体验。', color:'#92400e', tag:'实体创造' },
+      { name:'跨界学习（跨领域连接）', why:'你的天赋在于连接不同领域，刻意学习不同领域的知识能激活你最强大的创造力。', color:'#78350f', tag:'跨界融合' },
+    ],
+    careers: [
+      { icon:'🎬', title:'内容创作者 / IP打造', sub:'创意变现', desc:'把你的创造力变成内容，打造个人IP。在注意力经济时代，独特创意是最有价值的资产。', ai:'用AI辅助脚本生成、图像创作、视频剪辑，让你专注于创意本身，把内容生产速度提升10倍。' },
+      { icon:'🎯', title:'UX设计师 / 创意总监', sub:'设计驱动产品', desc:'你对美感和用户体验的直觉让你天然适合设计领域。把你的审美能力用于构建更好的产品体验。', ai:'AI设计工具(Midjourney, Figma AI)能快速实现你的创意概念，把创意原型的时间从天缩短到分钟。' },
+      { icon:'🚀', title:'创业者 / 产品创始人', sub:'把创意变成公司', desc:'你的创造力加上执行力就是一家公司的DNA。你最适合从0到1开创一个新品类或新产品。', ai:'用AI Agent团队代替传统的初创团队，用你的创意驱动AI完成研究、设计、营销等工作，以最小的团队验证最大的想法。' },
+    ],
+    wisdom: [
+      { quote:'为学日益，为道日损，损之又损，以至於无为。', source:'——老子《道德经》', interp:'真正的创造力来自减法，不是叠加更多，而是找到那个最本质的表达。去掉多余，只剩核心。' },
+      { quote:'北冥有鱼，其名为鲲，化而为鸟，其名为鹏。', source:'——庄子《逍遥游》', interp:'你的天赋是转化和飞翔的能力。不要被任何一种形式束缚，你就是那只能化身大鹏的鲲。' },
+    ],
+    peers: [
+      {
+        name: '达芬奇', era: '艺术家 · 科学家 · 发明家', years: '1452–1519',
+        avatar: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/Leonardo_self.jpg/240px-Leonardo_self.jpg',
+        resonance: '跨界创造的终极象征',
+        desc: '画家、雕塑家、建筑师、音乐家、数学家、工程师……达芬奇是人类历史上最极致的创造者，他证明了跨界天才的无限可能。'
+      },
+      {
+        name: '张爱玲', era: '作家 · 文学创作者', years: '1920–1995',
+        avatar: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/89/Zhang_Ailing_%281954%29.jpg/240px-Zhang_Ailing_%281954%29.jpg',
+        resonance: '用文字创造独特美学宇宙',
+        desc: '以犀利而唯美的笔触描绘人性的幽微，构建出属于自己的文学美学世界。她的创造力来自对生活极度敏锐的感知与转化。'
+      },
+      {
+        name: '史蒂夫·乔布斯', era: '创业者 · 产品设计师', years: '1955–2011',
+        avatar: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/dc/Steve_Jobs_Headshot_2010-CROP_%28cropped_2%29.jpg/240px-Steve_Jobs_Headshot_2010-CROP_%28cropped_2%29.jpg',
+        resonance: '把审美天才变成商业革命',
+        desc: '将艺术家的审美与工程师的精确融为一体，重新定义了手机、电脑、音乐播放器。他的核心天赋是用创造力改写人类与技术的关系。'
+      },
+    ]
+  },
+  CONNECTOR: {
+    icon: '🌟',
+    name: '卓越连接者',
+    en: 'The Master Connector',
+    color: '#ec4899',
+    desc: '你是人与人之间的桥梁。你天生善于理解他人，建立信任，编织关系网络。你的存在让一个团队变成一个有温度的共同体。孔子所说的"仁者爱人"——以人为中心的智慧，正是你天赋的本质。你不只是善于社交，你是真正能感动人心的人。',
+    mbti: ['ENFJ','ESFJ','INFJ','ENTJ'],
+    dims: ['empathy','social','helping','harmony','influence','trust'],
+    hobbies: [
+      { name:'非暴力沟通学习', why:'把你天生的共情能力系统化，成为能化解冲突、建立深度关系的沟通大师。', color:'#ec4899', tag:'深度沟通' },
+      { name:'公众演讲/脱口秀', why:'把你感染他人的天赋放大到台前，演讲是连接者最高价值的能力之一。', color:'#db2777', tag:'公众表达' },
+      { name:'心理学研究', why:'深入理解人的内心世界，让你的共情能力从直觉升华到系统的人性洞察。', color:'#be185d', tag:'人性理解' },
+      { name:'社群运营/组织建设', why:'你天生擅长把人聚在一起并保持活力，有意识地培养这个能力会让你成为社群核心。', color:'#9d174d', tag:'社群构建' },
+      { name:'辅导与教练技术', why:'把你帮助他人的冲动变成系统的能力，成为能帮助他人实现突破的职业教练。', color:'#831843', tag:'成长催化' },
+      { name:'跨文化体验/旅行', why:'理解不同文化的价值观，让你成为能在不同背景之间建立桥梁的全球连接者。', color:'#701a75', tag:'文化拓宽' },
+      { name:'读书会/论坛组织', why:'把人聚在一起共同成长，是你最自然的创造价值方式。', color:'#86198f', tag:'知识社群' },
+    ],
+    careers: [
+      { icon:'🎓', title:'教练/导师/培训师', sub:'赋能他人成长', desc:'你对人的理解和影响力让你天然适合帮助他人成长。无论是企业培训师、生涯规划师还是人生教练，你都能让他人发生真实的改变。', ai:'用AI辅助生成个性化学习路径和反馈报告，让你的教练服务同时服务更多人，影响力成倍放大。' },
+      { icon:'🤝', title:'社群创始人 / 生态建设者', sub:'构建人与人的网络', desc:'你能把散落的人聚在一起，创造出一个有价值的社群生态。这是AI时代最具护城河的能力——因为人与人的真实连接是AI无法替代的。', ai:'借助AI做社群内容运营、自动化信息匹配，让你把时间集中在最高价值的人际连接上。' },
+      { icon:'📣', title:'品牌传播 / 公关负责人', sub:'让价值被看见', desc:'你理解人心，知道什么故事能打动人。这让你天然擅长品牌传播、公关策略，让好的产品和使命被更多人看见。', ai:'AI生成内容初稿+你的人心洞察进行优化，比传统内容团队效率高5倍以上。' },
+    ],
+    wisdom: [
+      { quote:'己所不欲，勿施于人。', source:'——孔子《论语·颜渊》', interp:'你的共情力来自这里——先感受对方的处境，再决定如何回应。这是连接者最深的修行。' },
+      { quote:'信言不美，美言不信。', source:'——老子《道德经》', interp:'真正能建立信任的，不是悦耳的话，而是真实的话。连接者最大的力量在于真诚。' },
+    ],
+    peers: [
+      {
+        name: '孔子', era: '思想家 · 教育家', years: '公元前551–479',
+        avatar: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Confucius_Tang_Dynasty.jpg/240px-Confucius_Tang_Dynasty.jpg',
+        resonance: '以"仁"连接天下人心',
+        desc: '中国历史上最伟大的教育家与人际连接者。"有教无类"的理念打破阶层，他用对话与关系改变了整个文明，三千弟子正是他连接力的见证。'
+      },
+      {
+        name: '特蕾莎修女', era: '人道主义者 · 诺贝尔和平奖', years: '1910–1997',
+        avatar: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Mother_Teresa_1.jpg/240px-Mother_Teresa_1.jpg',
+        resonance: '用爱连接最边缘的生命',
+        desc: '一生扎根加尔各答贫民窟，用纯粹的共情与爱的行动，感动了全世界。她的连接力源于对每个生命最深切的尊重与关怀。'
+      },
+      {
+        name: '奥普拉·温弗瑞', era: '媒体人 · 社群影响者', years: '1954–',
+        avatar: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/Oprah_in_2014.jpg/240px-Oprah_in_2014.jpg',
+        resonance: '用真实共情创造亿级连接',
+        desc: '从贫困童年走向全球最具影响力的媒体人，她的核心竞争力是真实的共情力——让每一位嘉宾和观众都感到被深深理解。'
+      },
+    ]
+  },
+  LEADER: {
+    icon: '⚡',
+    name: '天生领导者',
+    en: 'The Natural Leader',
+    color: '#f59e0b',
+    desc: '你有着驱动他人和推动变革的天然能量。你在混乱中看到方向，在危机中保持清醒，能让一群人相信同一个目标并为之行动。阳明先生"知行合一"的精髓就在你身上——你不只是懂道理，你还会让道理发生。',
+    mbti: ['ENTJ','ESTJ','ENFJ','ESTP'],
+    dims: ['leadership','competitive','execution','goal-oriented','agency','assertive'],
+    hobbies: [
+      { name:'战略商业阅读', why:'历史上的领导者和商业案例是你的镜子，从他们的成败中萃取你自己的领导智慧。', color:'#f59e0b', tag:'战略眼光' },
+      { name:'极限运动/马拉松', why:'挑战身体的极限能培养你的心理韧性，而韧性是领导力最深的根基。', color:'#d97706', tag:'身心锻造' },
+      { name:'公众演讲/辩论', why:'领导力的核心是让人跟随你的愿景，演讲是把你的愿景传递出去的最直接工具。', color:'#b45309', tag:'愿景传播' },
+      { name:'商业游戏/模拟经营', why:'在相对安全的环境中锻炼决策能力，让你的战略直觉更加敏锐。', color:'#92400e', tag:'决策训练' },
+      { name:'冥想与领导力修炼', why:'王阳明在龙场悟道，最强大的领导力来自内心的定力。冥想是建立这种定力的关键。', color:'#78350f', tag:'内在定力' },
+      { name:'写作/分享愿景', why:'把你看到的未来写出来，这既是领导力的修炼，也是吸引同频者的最好方式。', color:'#6b3a2a', tag:'愿景构建' },
+      { name:'跨领域学习', why:'伟大的领导者都有超越单一领域的视野，持续跨界学习是保持领导力先见性的关键。', color:'#5a2d0c', tag:'视野拓展' },
+    ],
+    careers: [
+      { icon:'🏢', title:'创业者 / CEO', sub:'建造你的事业帝国', desc:'你的领导力天赋最自然的归宿是创建属于自己的组织。你能把一个想法变成一个团队，再变成一家公司。', ai:'以AI Agent组建虚拟团队，在验证阶段以极低成本运作。让AI负责执行，你负责方向和决策。' },
+      { icon:'🎯', title:'产品负责人 / 事业部 GM', sub:'在组织内部建功立业', desc:'你擅长设定目标、推动执行、整合资源。在大组织里，你是最能带动结果的那个人。', ai:'用AI做数据分析和市场研究，让你的决策质量更高；用AI自动化流程，让你的团队精力聚焦在关键事项。' },
+      { icon:'🌍', title:'社会创新者 / NGO领导', sub:'用领导力改变世界', desc:'如果你的使命感强于商业驱动力，社会影响力领域是你领导才华的最高价值实现场所。', ai:'AI帮助你更高效地连接资源、分析社会问题、规模化你的影响力，让善意用更少的成本触达更多人。' },
+    ],
+    wisdom: [
+      { quote:'知行合一，不是两件事，是一件事。', source:'——王阳明', interp:'领导力的本质不在于你懂多少道理，而在于你做了什么。真正的领导者知道的事情，一定会立刻去做。' },
+      { quote:'为学日益，为道日损。', source:'——老子《道德经》', interp:'最有力量的领导是做减法：减去自我，减去执念，让团队的智慧自然涌现。水善利万物而不争。' },
+    ],
+    peers: [
+      {
+        name: '曾国藩', era: '晚清政治家 · 军事家', years: '1811–1872',
+        avatar: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Zeng_Guofan.jpg/240px-Zeng_Guofan.jpg',
+        resonance: '以自律与知行合一成就领导',
+        desc: '从普通书生到大清中兴名臣，以极强的自我修炼与执行力，在乱世中建立湘军、平定太平天国。他的领导力根植于"慎独"与"日日精进"。'
+      },
+      {
+        name: '埃隆·马斯克', era: '连续创业者 · 未来领导者', years: '1971–',
+        avatar: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/Elon_Musk_Royal_Society_%28crop2%29.jpg/240px-Elon_Musk_Royal_Society_%28crop2%29.jpg',
+        resonance: '用使命感驱动不可能的目标',
+        desc: 'SpaceX、特斯拉、Neuralink……他同时在多个领域颠覆既有格局。领导力的核心是在别人说"不可能"时，带领团队让它成为现实。'
+      },
+      {
+        name: '武则天', era: '政治家 · 中国历史上唯一女皇', years: '624–705',
+        avatar: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Wu_Zetian%28retouched%29.jpg/240px-Wu_Zetian%28retouched%29.jpg',
+        resonance: '在逆境中展现的极致领导意志',
+        desc: '突破性别与时代的重重阻碍，登上权力顶峰，开创武周。她展现了顶级领导者最核心的特质：在极端压力下保持清醒判断与果断行动。'
+      },
+    ]
+  },
+  EXPLORER: {
+    icon: '🧭',
+    name: '自由探索者',
+    en: 'The Free Explorer',
+    color: '#4ecdc4',
+    desc: '你有着永不熄灭的好奇心和探索欲。任何新事物都能点燃你，你讨厌一成不变，渴望在未知中发现惊喜。庄子说"乘天地之正，御六气之辩，以游无穷"——这就是你的人生哲学。你的天赋在于"探索"本身，在于看见别人还没看见的地方。',
+    mbti: ['ENTP','ENFP','ISTP','ESTP'],
+    dims: ['breadth','flexibility','explorer','nature','intuitive'],
+    hobbies: [
+      { name:'多领域博览阅读', why:'你的天赋是连接不同知识，广博的阅读是探索者最重要的天赋燃料。', color:'#4ecdc4', tag:'知识探索' },
+      { name:'户外探险/旅行', why:'探索者需要真实的空间维度——走进陌生的地方，让身体和内心同步探索世界。', color:'#14b8a6', tag:'空间探索' },
+      { name:'新技术早期体验', why:'你的直觉会让你提前感知到未来，成为新技术的早期用户是探索者最自然的行为。', color:'#0d9488', tag:'前沿探索' },
+      { name:'即兴表达/即兴表演', why:'放下脚本，进入当下——即兴能力是探索者把自由本能转化为创造力的最好训练方法。', color:'#0f766e', tag:'即兴创造' },
+      { name:'冒险类游戏/密室逃脱', why:'锻炼你的临场判断和适应力，这种能力在现实世界中就是你最重要的竞争优势。', color:'#115e59', tag:'临场适应' },
+      { name:'访谈与深度对话', why:'通过和各种各样的人深度交流，你能获取最稀缺的"现实世界的第一手洞察"。', color:'#134e4a', tag:'人生探索' },
+      { name:'写日记/思想实验', why:'把你的探索和发现记录下来，久而久之会形成你独特的世界观和知识体系。', color:'#1a3a3a', tag:'自我记录' },
+    ],
+    careers: [
+      { icon:'🔬', title:'独立研究员 / 科技探索者', sub:'职业探索先行者', desc:'你的好奇心是你最大的资产。在AI时代，能快速探索和验证新方向的人比深度专家更稀缺。', ai:'用AI Agent快速做领域调研、竞品分析、市场验证，你的探索速度会比传统研究者快10倍。' },
+      { icon:'🌐', title:'连续创业者 / 产品猎人', sub:'在变化中发现机会', desc:'你不需要守一个地方，你需要不断发现新机会、验证、放大。连续创业或产品猎人模式最适合你。', ai:'AI帮你快速原型验证，一个人可以跑多个项目的早期探索，用AI降低每次探索的成本。' },
+      { icon:'📡', title:'趋势研究员 / 未来学家', sub:'看见还没发生的未来', desc:'你的直觉和跨领域视野，让你能更早看见趋势。这种能力在媒体、咨询、投资领域都极具价值。', ai:'用AI持续扫描全球信息，你负责解读趋势背后的意义，人机协作打造个人趋势研究品牌。' },
+    ],
+    wisdom: [
+      { quote:'道可道，非常道。名可名，非常名。', source:'——老子《道德经》', interp:'探索者要警惕"固化标签"。真正的探索是永远保持开放，不让任何定义和分类限制你看见的范围。' },
+      { quote:'子曰：学而不思则罔，思而不学则殆。', source:'——孔子《论语·为政》', interp:'探索不能只是走马观花。每一次探索之后，停下来思考，才能让广博的输入变成真正属于你的智慧。' },
+    ],
+    peers: [
+      {
+        name: '庄子', era: '哲学家 · 道家思想集大成者', years: '约前369–前286',
+        avatar: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8b/Zhuangzi-Hatala-1.jpg/240px-Zhuangzi-Hatala-1.jpg',
+        resonance: '精神自由探索的最高象征',
+        desc: '"逍遥游"是探索者的精神宣言。庄子拒绝一切束缚，在思想的无限宇宙中自由翱翔，他的哲学本质是对边界的永恒突破。'
+      },
+      {
+        name: '尼古拉·特斯拉', era: '发明家 · 科学探索者', years: '1856–1943',
+        avatar: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/N.Tesla.JPG/240px-N.Tesla.JPG',
+        resonance: '超越时代的孤独探索者',
+        desc: '直流电之争、无线电、交流电系统……特斯拉的探索超前于他所处的时代数十年。他是一个纯粹的探索者，在未知中寻找世界运行的秘密。'
+      },
+      {
+        name: '徐霞客', era: '地理学家 · 旅行探险家', years: '1587–1641',
+        avatar: 'https://upload.wikimedia.org/wikipedia/zh/thumb/8/8b/Xu_Xiake.jpg/240px-Xu_Xiake.jpg',
+        resonance: '用双脚探索世界的中国探险家',
+        desc: '抛弃仕途，以30年时间走遍中国山川，留下《徐霞客游记》。他的探索精神在于：不为功名，只为亲眼看见未被记录的世界。'
+      },
+    ]
+  }
+};
+
+// 答案存储
+let answers = {};
+let userInfo = {};
+
+function showUserInfo() {
+  document.getElementById('cover').style.display = 'none';
+  document.getElementById('user-info-page').style.display = 'block';
+}
+
+function startTest() {
+  userInfo = {
+    name: document.getElementById('uname').value || '探索者',
+    year: parseInt(document.getElementById('byear').value) || null,
+    month: parseInt(document.getElementById('bmonth').value) || null,
+    day: parseInt(document.getElementById('bday').value) || null,
+    gender: document.getElementById('ugender').value,
+    status: document.getElementById('ustatus').value,
+    goal: document.getElementById('ugoal').value,
+  };
+  userInfo.zodiac = getZodiac(userInfo.month, userInfo.day);
+  userInfo.mbtiHint = getChineseZodiac(userInfo.year);
+
+  document.getElementById('user-info-page').style.display = 'none';
+  document.getElementById('test-page').style.display = 'block';
+  renderQuestions();
+}
+
+function getZodiac(month, day) {
+  if (!month || !day) return null;
+  const signs = [
+    [1,20,'水瓶座'],[2,19,'双鱼座'],[3,21,'白羊座'],[4,20,'金牛座'],
+    [5,21,'双子座'],[6,21,'巨蟹座'],[7,23,'狮子座'],[8,23,'处女座'],
+    [9,23,'天秤座'],[10,23,'天蝎座'],[11,22,'射手座'],[12,22,'摩羯座']
+  ];
+  for (let [m, d, name] of signs) {
+    if (month < m || (month === m && day < d)) return name;
+  }
+  return '摩羯座';
+}
+
+function getChineseZodiac(year) {
+  if (!year) return null;
+  const animals = ['猴','鸡','狗','猪','鼠','牛','虎','兔','龙','蛇','马','羊'];
+  return animals[year % 12] + '年';
+}
+
+function renderQuestions() {
+  const container = document.getElementById('questions-container');
+  let html = '';
+  let currentSection = '';
+
+  QUESTIONS.forEach((q, idx) => {
+    if (q.section !== currentSection) {
+      currentSection = q.section;
+      const sec = SECTIONS.find(s => s.id === currentSection);
+      html += `<div class="section-divider">
+        <div class="divider-line"></div>
+        <div class="divider-label">${sec.icon} 第${['一','二','三','四','五'][SECTIONS.indexOf(sec)]}维度：${sec.name}</div>
+        <div class="divider-line"></div>
+      </div>`;
+    }
+
+    html += `<div class="question-card" id="qcard-${q.id}">
+      <div class="question-header">
+        <div class="q-num">${q.id}</div>
+        <div>
+          <div class="q-text">${q.text}</div>
+          ${q.tip ? `<div class="q-tip">${q.tip}</div>` : ''}
+        </div>
+      </div>`;
+
+    if (q.type === 'scale') {
+      html += `<div class="scale-wrap">
+        <div class="scale-label">${q.left}</div>
+        <div class="scale-btns">
+          ${[1,2,3,4,5].map(v => `<button class="scale-btn" data-qid="${q.id}" data-val="${v}" onclick="selectScale(${q.id},${v})">${v}</button>`).join('')}
+        </div>
+        <div class="scale-label right">${q.right}</div>
+      </div>`;
+    } else {
+      const cols = q.options.length === 3 ? 'three' : (q.options.length === 2 ? 'single' : '');
+      html += `<div class="options-grid ${cols}">
+        ${q.options.map((opt, oi) => `<button class="option-btn" data-qid="${q.id}" data-val="${oi}" onclick="selectOption(${q.id},${oi})">${opt}</button>`).join('')}
+      </div>`;
+    }
+
+    html += '</div>';
+  });
+
+  container.innerHTML = html;
+  updateProgress();
+}
+
+function selectScale(qid, val) {
+  answers[qid] = val;
+  document.querySelectorAll(`[data-qid="${qid}"].scale-btn`).forEach(btn => {
+    btn.classList.toggle('selected', parseInt(btn.dataset.val) === val);
+  });
+  document.getElementById(`qcard-${qid}`).classList.add('answered');
+  updateProgress();
+}
+
+function selectOption(qid, val) {
+  answers[qid] = val;
+  document.querySelectorAll(`[data-qid="${qid}"].option-btn`).forEach(btn => {
+    btn.classList.toggle('selected', parseInt(btn.dataset.val) === val);
+  });
+  document.getElementById(`qcard-${qid}`).classList.add('answered');
+  updateProgress();
+}
+
+function updateProgress() {
+  const count = Object.keys(answers).length;
+  document.getElementById('answered-count').textContent = count;
+  document.getElementById('progress-fill').style.width = (count / 80 * 100) + '%';
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function submitTest() {
+  const total = Object.keys(answers).length;
+  if (total < 60) {
+    showToast(`还有 ${80 - total} 道题未完成，请尽量作答更多题目`);
+    return;
+  }
+
+  // 计算得分
+  const scores = calculateScores();
+  const archetype = determineArchetype(scores);
+  renderResult(archetype);
+}
+
+function calculateScores() {
+  const dims = {
+    analytical: 0, logical: 0, intellectual: 0, philosophical: 0, pattern: 0,
+    creative: 0, artistic: 0, aesthetic: 0, sensory: 0, expression: 0,
+    empathy: 0, social: 0, helping: 0, harmony: 0, influence: 0, trust: 0,
+    leadership: 0, competitive: 0, execution: 0, 'goal-oriented': 0, agency: 0, assertive: 0,
+    breadth: 0, flexibility: 0, explorer: 0, nature: 0, intuitive: 0,
+    verbal: 0, spatial: 0, musical: 0, kinesthetic: 0,
+    intrinsic: 0, values: 0, mission: 0, justice: 0, independence: 0,
+    focus: 0, making: 0, planning: 0,
+  };
+
+  const dimCounts = {};
+  Object.keys(dims).forEach(k => dimCounts[k] = 0);
+
+  QUESTIONS.forEach(q => {
+    if (answers[q.id] === undefined) return;
+    const val = answers[q.id];
+
+    if (q.type === 'scale') {
+      dims[q.dim] = (dims[q.dim] || 0) + val;
+      dimCounts[q.dim] = (dimCounts[q.dim] || 0) + 1;
+    } else {
+      const selectedDim = q.dims[val];
+      if (selectedDim && dims[selectedDim] !== undefined) {
+        dims[selectedDim] += 3;
+        dimCounts[selectedDim] = (dimCounts[selectedDim] || 0) + 1;
+      }
+    }
+  });
+
+  // 归一化
+  const normalized = {};
+  Object.keys(dims).forEach(k => {
+    if (dimCounts[k] > 0) {
+      normalized[k] = dims[k] / (dimCounts[k] * 5);
+    } else {
+      normalized[k] = 0.3;
+    }
+  });
+
+  return normalized;
+}
+
+function determineArchetype(scores) {
+  const archetypeScores = {
+    THINKER: (scores.analytical + scores.logical + scores.intellectual + scores.philosophical + scores.pattern) / 5,
+    CREATOR: (scores.creative + scores.artistic + scores.aesthetic + scores.sensory + scores.expression) / 5,
+    CONNECTOR: (scores.empathy + scores.social + scores.helping + scores.harmony + scores.influence) / 5,
+    LEADER: (scores.leadership + scores.competitive + scores.execution + scores['goal-oriented'] + scores.agency) / 5,
+    EXPLORER: (scores.breadth + scores.flexibility + scores.explorer + scores.intuitive + scores.nature) / 5,
+  };
+
+  let best = 'THINKER', bestScore = 0;
+  Object.entries(archetypeScores).forEach(([k, v]) => {
+    if (v > bestScore) { bestScore = v; best = k; }
+  });
+
+  return { type: best, typeScores: archetypeScores, dimScores: scores };
+}
+
+function renderResult(result) {
+  const scores = result.dimScores;
+  document.getElementById('test-page').style.display = 'none';
+  document.getElementById('result-page').style.display = 'block';
+  window.scrollTo(0, 0);
+
+  const arch = ARCHETYPES[result.type];
+  const zodiacInfo = userInfo.zodiac ? `（${userInfo.zodiac}）` : '';
+
+  // 主要维度
+  const mainDims = [
+    { label: '思维分析力', key: 'analytical', color: '#a855f7' },
+    { label: '创造表达力', key: 'creative', color: '#f97316' },
+    { label: '人际共情力', key: 'empathy', color: '#ec4899' },
+    { label: '领导推动力', key: 'leadership', color: '#f59e0b' },
+    { label: '探索好奇心', key: 'breadth', color: '#4ecdc4' },
+    { label: '直觉洞察力', key: 'intuitive', color: '#60a5fa' },
+    { label: '语言表达力', key: 'verbal', color: '#34d399' },
+    { label: '审美感知力', key: 'aesthetic', color: '#f472b6' },
+  ];
+
+  const dimBarsHTML = mainDims.map(d => {
+    const pct = Math.round((scores[d.key] || 0.3) * 100);
+    return `<div class="dim-bar-row">
+      <div class="dim-bar-label">${d.label}</div>
+      <div class="dim-bar-track">
+        <div class="dim-bar-fill" style="width:${pct}%;background:${d.color}"></div>
+      </div>
+      <div class="dim-bar-val">${pct}%</div>
+    </div>`;
+  }).join('');
+
+  // 天赋特质
+  const traitMap = {
+    THINKER: [
+      { icon:'🔍', name:'洞察本质', desc:'能穿透表象，看到事物底层规律' },
+      { icon:'🕸️', name:'系统思维', desc:'自然地构建复杂系统的完整视角' },
+      { icon:'📖', name:'深度学习', desc:'对知识有持续的饥渴和系统吸收能力' },
+      { icon:'💡', name:'逻辑推演', desc:'能从有限信息推导出严密结论' },
+    ],
+    CREATOR: [
+      { icon:'✨', name:'创意涌现', desc:'脑中持续产生新想法和新可能' },
+      { icon:'🎨', name:'审美直觉', desc:'天生对美有独特感知和表达欲' },
+      { icon:'🔗', name:'跨界连接', desc:'把不同领域的元素连接创造新价值' },
+      { icon:'🌈', name:'多维表达', desc:'能用多种形式将内在世界具象化' },
+    ],
+    CONNECTOR: [
+      { icon:'❤️', name:'深度共情', desc:'真实感受他人情绪，让人感到被理解' },
+      { icon:'🌉', name:'关系编织', desc:'天然在人与人之间建立有意义的连接' },
+      { icon:'🕊️', name:'化解冲突', desc:'能找到不同立场的共同地带' },
+      { icon:'🌟', name:'激励他人', desc:'你的存在让周围人感到被看见和被激励' },
+    ],
+    LEADER: [
+      { icon:'🧭', name:'方向感知', desc:'在混乱中清晰感知到正确的方向' },
+      { icon:'⚡', name:'推动力量', desc:'让计划从想法变成现实的执行能量' },
+      { icon:'👥', name:'凝聚人心', desc:'让不同的人相信同一个目标' },
+      { icon:'🎯', name:'结果导向', desc:'天然聚焦在目标和成果上' },
+    ],
+    EXPLORER: [
+      { icon:'🔭', name:'前沿感知', desc:'对新事物有早于他人的直觉感应' },
+      { icon:'🌀', name:'适应变化', desc:'在不确定中反而找到激活状态' },
+      { icon:'🗺️', name:'跨域视野', desc:'天生看见跨领域的联系和可能' },
+      { icon:'🎲', name:'直觉判断', desc:'在信息不足时，凭直觉做出准确判断' },
+    ],
+  };
+
+  const traitsHTML = (traitMap[result.type] || []).map(t => `
+    <div class="trait-card fade-in">
+      <div class="trait-icon">${t.icon}</div>
+      <div class="trait-name">${t.name}</div>
+      <div class="trait-desc">${t.desc}</div>
+    </div>
+  `).join('');
+
+  // 兴趣爱好
+  const colorsHobby = ['#4ecdc4','#a855f7','#f97316','#ec4899','#f59e0b','#60a5fa','#34d399'];
+  const hobbiesHTML = arch.hobbies.map((h, i) => `
+    <div class="hobby-card fade-in" style="border-left-color:${colorsHobby[i]}">
+      <div class="hobby-card" style="padding:0;border:none;background:none;">
+        <div style="position:absolute;top:0;left:0;width:4px;height:100%;background:${colorsHobby[i]};border-radius:4px 0 0 4px"></div>
+      </div>
+      <div class="hobby-num">NO.${i+1}</div>
+      <div class="hobby-name" style="color:${colorsHobby[i]}">${h.name}</div>
+      <div class="hobby-why">${h.why}</div>
+      <span class="hobby-tag" style="color:${colorsHobby[i]};background:${colorsHobby[i]}22;border:1px solid ${colorsHobby[i]}44">${h.tag}</span>
+    </div>
+  `).join('');
+
+  // 职业方向
+  const careersHTML = arch.careers.map(c => `
+    <div class="career-card fade-in">
+      <div class="career-header">
+        <div class="career-icon">${c.icon}</div>
+        <div>
+          <div class="career-title">${c.title}</div>
+          <div class="career-sub">${c.sub}</div>
+        </div>
+      </div>
+      <div class="career-desc">${c.desc}</div>
+      <div class="ai-collab">
+        <strong>🤖 AI协作方式：</strong>${c.ai}
+      </div>
+    </div>
+  `).join('');
+
+  // 天赋同行者
+  const peerEmojis = { THINKER:'🧠', CREATOR:'🎨', CONNECTOR:'🤝', LEADER:'⚡', EXPLORER:'🧭' };
+  const peerEmoji = peerEmojis[result.type] || '✦';
+  const peersHTML = (arch.peers || []).map(p => `
+    <div class="peer-card fade-in">
+      <div class="peer-avatar-wrap">
+        <img class="peer-avatar" src="${p.avatar}" alt="${p.name}"
+          onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div style="display:none;width:100%;height:100%;align-items:center;justify-content:center;font-size:64px;background:rgba(201,168,76,0.08)">${peerEmoji}</div>
+        <div class="peer-resonance-badge">${p.resonance}</div>
+      </div>
+      <div class="peer-info">
+        <div class="peer-name">${p.name}</div>
+        <div class="peer-era">${p.era}</div>
+        <div class="peer-years">${p.years}</div>
+        <div class="peer-desc">${p.desc}</div>
+      </div>
+    </div>
+  `).join('');
+
+  // 哲学智慧
+  const wisdomHTML = arch.wisdom.map(w => `
+    <div class="wisdom-card fade-in">
+      <div class="wisdom-quote">"${w.quote}"</div>
+      <div class="wisdom-source">${w.source}</div>
+      <div class="wisdom-interp">${w.interp}</div>
+    </div>
+  `).join('');
+
+  // 5大原型得分
+  const archetypeLabels = { THINKER:'思想家', CREATOR:'创造者', CONNECTOR:'连接者', LEADER:'领导者', EXPLORER:'探索者' };
+  const archetypeColors = { THINKER:'#a855f7', CREATOR:'#f97316', CONNECTOR:'#ec4899', LEADER:'#f59e0b', EXPLORER:'#4ecdc4' };
+  const archetypeBarsHTML = Object.entries(result.typeScores).map(([k, v]) => {
+    const pct = Math.round(v * 100);
+    return `<div class="dim-bar-row">
+      <div class="dim-bar-label">${archetypeLabels[k]}</div>
+      <div class="dim-bar-track">
+        <div class="dim-bar-fill" style="width:${pct}%;background:${archetypeColors[k]}"></div>
+      </div>
+      <div class="dim-bar-val">${pct}%</div>
+    </div>`;
+  }).join('');
+
+  const mbtiSuggested = arch.mbti.join(' / ');
+
+  document.getElementById('result-content').innerHTML = `
+    <div class="result-hero fade-in" style="border-color:${arch.color}44">
+      <div class="result-archetype-icon">${arch.icon}</div>
+      <div class="result-archetype-name" style="color:${arch.color}">${arch.name}</div>
+      <div class="result-archetype-en">${arch.en}</div>
+      <div style="color:var(--muted);font-size:13px;margin-bottom:12px">
+        ${userInfo.name} · ${zodiacInfo}${userInfo.mbtiHint || ''}
+        ${userInfo.status ? ' · ' + {student:'学生',working:'职场人',entrepreneur:'创业者',freelance:'自由职业',transition:'转型中',other:'其他'}[userInfo.status] : ''}
+      </div>
+      <div class="mbti-badge">
+        ${mbtiSuggested.split(' / ').map(t => `<div class="mbti-letter" style="background:${arch.color}22;color:${arch.color};border:1px solid ${arch.color}44;font-size:13px;width:auto;padding:0 8px;border-radius:6px">${t}</div>`).join('')}
+      </div>
+      <div class="result-archetype-desc" style="margin-top:16px">${arch.desc}</div>
+    </div>
+
+    <div class="result-section fade-in">
+      <div class="result-section-title">📊 五大天赋原型分布</div>
+      <div class="dim-bars">${archetypeBarsHTML}</div>
+    </div>
+
+    <div class="result-section fade-in">
+      <div class="result-section-title">🌈 八大维度能力图谱</div>
+      <div class="dim-bars">${dimBarsHTML}</div>
+    </div>
+
+    <div class="result-section fade-in">
+      <div class="result-section-title">✦ 你的核心天赋特质</div>
+      <div class="traits-grid">${traitsHTML}</div>
+    </div>
+
+    <div class="result-section fade-in">
+      <div class="result-section-title">🎯 推荐培养的 7 个兴趣爱好</div>
+      <div style="color:var(--muted);font-size:13px;margin-bottom:16px">基于你的天赋特征，这7个爱好能最有效地发挥和放大你的优势</div>
+      <div class="hobbies-grid">${hobbiesHTML}</div>
+    </div>
+
+    <div class="result-section fade-in">
+      <div class="result-section-title">🚀 结合 AI Agent 的职业发展方向</div>
+      <div style="color:var(--muted);font-size:13px;margin-bottom:16px">这些方向不只是"适合你"，更是"能让你的天赋乘以AI的力量"的高价值路径</div>
+      <div class="career-grid">${careersHTML}</div>
+    </div>
+
+    <div class="result-section fade-in">
+      <div class="result-section-title">☯ 东方哲学给你的智慧</div>
+      <div style="color:var(--muted);font-size:13px;margin-bottom:16px">古人早已洞见你天赋的本质，他们的话是写给你的</div>
+      ${wisdomHTML}
+    </div>
+
+    <div class="result-section fade-in">
+      <div class="result-section-title">🌟 与你天赋同频的历史人物</div>
+      <div style="color:var(--muted);font-size:13px;margin-bottom:20px">这些古今中外的人物，和你拥有相似的天赋基因——看见他们，也是看见更完整的自己</div>
+      <div class="peers-grid">${peersHTML}</div>
+    </div>
+
+    <div class="result-section fade-in" style="background:rgba(201,168,76,0.05);border-color:rgba(201,168,76,0.3)">
+      <div class="result-section-title">💌 给你的话</div>
+      <div style="font-size:15px;line-height:1.9;color:var(--text)">
+        ${userInfo.name}，你是一个 <strong style="color:${arch.color}">${arch.name}</strong>。<br><br>
+        天赋不是你做到了什么，而是你在做某些事情时感受到的那种"回家了"的感觉——流畅、自然、不费力，甚至忘记时间。<br><br>
+        王阳明说"此心不动，随机而动"。你最强大的状态，是从内心出发的行动，不是来自别人的期待，而是来自你内在的声音。<br><br>
+        在AI时代，你的天赋有了全新的放大器。让AI处理重复、机械的部分，你专注在只有你能做的那些——<strong style="color:var(--gold)">洞察、创造、连接、影响</strong>。<br><br>
+        <em style="color:var(--muted)">愿你找到你的道，知行合一，此心光明。</em>
+      </div>
+    </div>
+  `;
+
+  // 触发动画
+  setTimeout(() => {
+    document.querySelectorAll('.dim-bar-fill').forEach(el => {
+      const w = el.style.width;
+      el.style.width = '0%';
+      setTimeout(() => el.style.width = w, 100);
+    });
+  }, 200);
+}
+
+// 键盘快捷键：按Enter继续
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.getElementById('user-info-page').style.display !== 'none') {
+    startTest();
+  }
+});
+
+// 导出PDF
+function exportPDF() {
+  window.print();
+}
+
+</script>
+</body>
+</html>
